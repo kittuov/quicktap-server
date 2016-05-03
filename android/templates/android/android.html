@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Android App Interface</title>
+</head>
+<body>
+<script>
+
+    window.Android.Loaded("/android/", 200, "success");
+    var ws;
+    function request(method, url, data) {
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                window.Android.Loaded(url, xmlhttp.status, xmlhttp.responseText);
+                console.log(url);
+                console.log(xmlhttp.status);
+                console.log(xmlhttp.responseText);
+            }
+        };
+        xmlhttp.open(method, url);
+        var csrftoken = getCookie("csrftoken");
+        xmlhttp.setRequestHeader("X-CSRFToken", csrftoken);
+        data = JSON.stringify(data);
+        console.log(data);
+        xmlhttp.send(data);
+    }
+
+    function encodeJSON(obj) {
+        var output = "";
+        for (var key in obj)
+            if (obj.hasOwnProperty(key)) {
+                if (output != "") output += "&";
+                output += encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]);
+            }
+        return output
+    }
+
+    function user() {
+        request("GET", "/api/login/", {});
+    }
+
+    function getCookie(name) {
+        var value = "; " + document.cookie;
+        var parts = value.split("; " + name + "=");
+        if (parts.length == 2) return parts.pop().split(";").shift();
+    }
+
+    function joinRoom(uri, room) {
+        ws = new WebSocket(uri);
+        console.log(uri);
+        console.log(room);
+        ws.onopen = function () {
+            ws.send('{"room":"' + room + '"}');
+        };
+        ws.onmessage = function (message) {
+            console.log(message.data);
+            window.Android.onWebMessage(message.data);
+        };
+        ws.onclose = function () {
+            window.Android.onWebDisconnect();
+        };
+        ws.onerror = function () {
+            window.AndroidWS.onWebDisconnect();
+        };
+        console.log(ws.readyState)
+    }
+
+    function leaveRoom(){
+        ws.close();
+    }
+
+    function startGame(){
+        ws.send("{'startGame':true}");
+    }
+
+</script>
+</body>
+</html>
