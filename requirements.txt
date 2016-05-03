@@ -1,0 +1,4 @@
+django
+djwebsockets
+websockets
+djangorestframework
